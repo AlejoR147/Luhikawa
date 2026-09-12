@@ -35,12 +35,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -86,6 +88,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
+
 val BackgroundColor = Color(0xFF1A1717)
 val AccentColor3 = Color(0xFFC7AF93)
 
@@ -126,156 +129,242 @@ class MainActivity : ComponentActivity() {
                             val taskId = backStackEntry.arguments?.getString("taskId")
                             RecordatorioScreen(navController = navController, taskId = taskId)
                         }
+
+                        composable(route = "perfil") {
+                            PerfilScreen(navController = navController)
+                        }
+
+                        // CalendarScreen()
+                        // AiScreen()
                     }
-
-                    // CalendarScreen()
-                    // AiScreen()
-                    // PerfilScreen()
                 }
             }
         }
     }
-}
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-@Composable
-fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
-    var categoriaSeleccionada by remember { mutableStateOf("Trabajo") }
 
-    val categorias = listOf(
-        "Trabajo",
-        "Estudio",
-        "Hábitos",
-        "Personal",
-        "Lista de deseos",
-        "Cumpleaños"
-    )
+    @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+    @Composable
+    fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
+        var categoriaSeleccionada by remember { mutableStateOf("Trabajo") }
 
-    val db = FirebaseFirestore.getInstance()
-    var listaDeTareas by remember { mutableStateOf<List<Pair<String, Map<String, Any>>>>(emptyList()) }
+        val categorias = listOf(
+            "Trabajo",
+            "Estudio",
+            "Hábitos",
+            "Personal",
+            "Lista de deseos",
+            "Cumpleaños"
+        )
 
-    var showDatePicker by remember { mutableStateOf(false) }
-    var selectedTaskIdForDate by remember { mutableStateOf<String?>(null) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var taskIdToDelete by remember { mutableStateOf<String?>(null) }
-
-    var showRestoreDialog by remember { mutableStateOf(false) }
-    var selectedTaskIdForRestore by remember { mutableStateOf<String?>(null) }
-
-    val cargarTareas = {
-        val query = if (categoriaSeleccionada == "Trabajo") {
-            db.collection("tasks")
-        } else {
-            db.collection("tasks").whereEqualTo("category", categoriaSeleccionada)
+        val db = FirebaseFirestore.getInstance()
+        var listaDeTareas by remember {
+            mutableStateOf<List<Pair<String, Map<String, Any>>>>(
+                emptyList()
+            )
         }
 
-        query.get()
-            .addOnSuccessListener { result ->
-                listaDeTareas = result.documents.mapNotNull { doc ->
-                    doc.data?.let { doc.id to it }
-                }
+        var showDatePicker by remember { mutableStateOf(false) }
+        var selectedTaskIdForDate by remember { mutableStateOf<String?>(null) }
+        var showDeleteDialog by remember { mutableStateOf(false) }
+        var taskIdToDelete by remember { mutableStateOf<String?>(null) }
+
+        var showRestoreDialog by remember { mutableStateOf(false) }
+        var selectedTaskIdForRestore by remember { mutableStateOf<String?>(null) }
+
+        val cargarTareas = {
+            val query = if (categoriaSeleccionada == "Trabajo") {
+                db.collection("tasks")
+            } else {
+                db.collection("tasks").whereEqualTo("category", categoriaSeleccionada)
             }
-    }
 
-    LaunchedEffect(categoriaSeleccionada) {
-        cargarTareas()
-    }
+            query.get()
+                .addOnSuccessListener { result ->
+                    listaDeTareas = result.documents.mapNotNull { doc ->
+                        doc.data?.let { doc.id to it }
+                    }
+                }
+        }
 
-    val tareasImportantes = listaDeTareas.filter { (_, tarea) ->
-        tarea["important"] as? Boolean ?: false
-    }
+        LaunchedEffect(categoriaSeleccionada) {
+            cargarTareas()
+        }
 
-    val tareasActivas = listaDeTareas.filter { (_, tarea) ->
-        val completada = tarea["completed"] as? Boolean ?: false
-        val importante = tarea["important"] as? Boolean ?: false
-        !completada && !importante
-    }
+        val tareasImportantes = listaDeTareas.filter { (_, tarea) ->
+            tarea["important"] as? Boolean ?: false
+        }
 
-    val tareasCompletadas = listaDeTareas.filter { (_, tarea) ->
-        val completada = tarea["completed"] as? Boolean ?: false
-        completada
-    }
+        val tareasActivas = listaDeTareas.filter { (_, tarea) ->
+            val completada = tarea["completed"] as? Boolean ?: false
+            val importante = tarea["important"] as? Boolean ?: false
+            !completada && !importante
+        }
 
-    val tareasPendientesTotales = listaDeTareas.filter { (_, tarea) ->
-        val completada = tarea["completed"] as? Boolean ?: false
-        !completada
-    }
+        val tareasCompletadas = listaDeTareas.filter { (_, tarea) ->
+            val completada = tarea["completed"] as? Boolean ?: false
+            completada
+        }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(BackgroundColor)
-                .padding(bottom = 8.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
+        val tareasPendientesTotales = listaDeTareas.filter { (_, tarea) ->
+            val completada = tarea["completed"] as? Boolean ?: false
+            !completada
+        }
+
+        Box(modifier = modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                    .fillMaxSize()
+                    .background(BackgroundColor)
+                    .padding(bottom = 8.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                RectanguloConImagen()
-
-                Row(
-                    modifier = Modifier
-                        .padding(top = 15.dp)
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    categorias.forEach { categoria ->
-                        EtiquetaTexto(
-                            texto = categoria,
-                            isSelected = (categoria == categoriaSeleccionada),
-                            onClick = { categoriaSeleccionada = categoria }
-                        )
-                    }
-                }
-
-                Text(
-                    text = "Tienes ${tareasPendientesTotales.size} tareas pendientes",
-                    color = Color.White,
-                    fontSize = 26.sp,
-                    fontFamily = InriaSerif,
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                        .padding(top = 16.dp)
-                )
-
-                Text(
-                    text = "Today´s Focus",
-                    color = Color(0xFFC7AF93),
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .padding(horizontal = 12.dp)
-                )
-
-                LazyColumn(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .padding(top = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    if (tareasImportantes.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Importantes (${tareasImportantes.size})",
-                                color = Color(0xFFC7AF93),
-                                fontSize = 18.sp,
-                                fontFamily = InriaSerif,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 12.dp)
+                    RectanguloConImagen()
+
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 15.dp)
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        categorias.forEach { categoria ->
+                            EtiquetaTexto(
+                                texto = categoria,
+                                isSelected = (categoria == categoriaSeleccionada),
+                                onClick = { categoriaSeleccionada = categoria }
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                    }
+
+                    Text(
+                        text = "Tienes ${tareasPendientesTotales.size} tareas pendientes",
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontFamily = InriaSerif,
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp)
+                            .padding(top = 16.dp)
+                    )
+
+                    Text(
+                        text = "Today´s Focus",
+                        color = Color(0xFFC7AF93),
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .padding(horizontal = 12.dp)
+                    )
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        if (tareasImportantes.isNotEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Importantes (${tareasImportantes.size})",
+                                    color = Color(0xFFC7AF93),
+                                    fontSize = 18.sp,
+                                    fontFamily = InriaSerif,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 12.dp)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                            }
+
+                            items(tareasImportantes.size) { index ->
+                                val (id, tarea) = tareasImportantes[index]
+                                val tituloBase = tarea["title"] as? String ?: "Sin título"
+                                val dueDateMillis = tarea["dueDate"] as? Long
+                                val fechaFormateada = formatearFecha(dueDateMillis)
+                                val horaFormateada = tarea["time"] as? String ?: ""
+                                val esImportante = true
+                                val iconIndex = (tarea["icon"] as? Long)?.toInt() ?: 0
+
+                                val infoTiempo = buildString {
+                                    if (fechaFormateada.isNotEmpty()) append(fechaFormateada)
+                                    if (fechaFormateada.isNotEmpty() && horaFormateada.isNotEmpty()) append(" • ")
+                                    if (horaFormateada.isNotEmpty()) append(horaFormateada)
+                                }
+
+                                val textoConFecha =
+                                    if (infoTiempo.isNotEmpty()) "$tituloBase - $infoTiempo" else tituloBase
+
+                                val onMarcarCompletada: () -> Unit = {
+                                    db.collection("tasks").document(id)
+                                        .update("completed", true)
+                                        .addOnSuccessListener { cargarTareas() }
+                                }
+
+                                val onMarcarImportante: () -> Unit = {
+                                    db.collection("tasks").document(id)
+                                        .update("important", !esImportante)
+                                        .addOnSuccessListener { cargarTareas() }
+                                }
+
+                                val onActualizarFecha: () -> Unit = {
+                                    selectedTaskIdForDate = id
+                                    showDatePicker = true
+                                }
+
+                                val onEnviarABasura: () -> Unit = {
+                                    taskIdToDelete = id
+                                    showDeleteDialog = true
+                                }
+
+                                val onEliminar: () -> Unit = {
+                                    db.collection("tasks").document(id)
+                                        .delete()
+                                        .addOnSuccessListener { cargarTareas() }
+                                }
+
+                                val onEditarClick: () -> Unit = {
+                                    navController.navigate("recordatorio?taskId=$id")
+                                }
+
+                                SwipeableTaskItem(
+                                    textoTarea = textoConFecha,
+                                    isCafe = (index % 2 == 0),
+                                    iconIndex = iconIndex,
+                                    onCircleClick = onMarcarCompletada,
+                                    onImportanteClick = onMarcarImportante,
+                                    onFechaClick = onActualizarFecha,
+                                    onBasuraClick = onEnviarABasura,
+                                    onEliminar = onEliminar,
+                                    onClick = onEditarClick
+                                )
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
                         }
 
-                        items(tareasImportantes.size) { index ->
-                            val (id, tarea) = tareasImportantes[index]
+                        items(tareasActivas.size) { index ->
+                            val (id, tarea) = tareasActivas[index]
                             val tituloBase = tarea["title"] as? String ?: "Sin título"
                             val dueDateMillis = tarea["dueDate"] as? Long
                             val fechaFormateada = formatearFecha(dueDateMillis)
-                            val esImportante = true
+                            val horaFormateada = tarea["time"] as? String ?: ""
+                            val esImportante = tarea["important"] as? Boolean ?: false
+                            val iconIndex = (tarea["icon"] as? Long)?.toInt() ?: 0   // <-- CORREGIDO
+
+                            val infoTiempo = buildString {
+                                if (fechaFormateada.isNotEmpty()) append(fechaFormateada)
+                                if (fechaFormateada.isNotEmpty() && horaFormateada.isNotEmpty()) append(" • ")
+                                if (horaFormateada.isNotEmpty()) append(horaFormateada)
+                            }
+
+                            val textoConFecha =
+                                if (infoTiempo.isNotEmpty()) "$tituloBase - $infoTiempo" else tituloBase
 
                             val onMarcarCompletada: () -> Unit = {
                                 db.collection("tasks").document(id)
@@ -309,11 +398,10 @@ fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
                                 navController.navigate("recordatorio?taskId=$id")
                             }
 
-                            val textoConFecha = if (fechaFormateada.isNotEmpty()) "$tituloBase - $fechaFormateada" else tituloBase
-
                             SwipeableTaskItem(
                                 textoTarea = textoConFecha,
                                 isCafe = (index % 2 == 0),
+                                iconIndex = iconIndex,   // <-- CORREGIDO
                                 onCircleClick = onMarcarCompletada,
                                 onImportanteClick = onMarcarImportante,
                                 onFechaClick = onActualizarFecha,
@@ -323,219 +411,182 @@ fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
                             )
                         }
 
-                        item {
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-                    }
-
-                    items(tareasActivas.size) { index ->
-                        val (id, tarea) = tareasActivas[index]
-                        val tituloBase = tarea["title"] as? String ?: "Sin título"
-                        val dueDateMillis = tarea["dueDate"] as? Long
-                        val fechaFormateada = formatearFecha(dueDateMillis)
-                        val esImportante = tarea["important"] as? Boolean ?: false
-
-                        val onMarcarCompletada: () -> Unit = {
-                            db.collection("tasks").document(id)
-                                .update("completed", true)
-                                .addOnSuccessListener { cargarTareas() }
-                        }
-
-                        val onMarcarImportante: () -> Unit = {
-                            db.collection("tasks").document(id)
-                                .update("important", !esImportante)
-                                .addOnSuccessListener { cargarTareas() }
-                        }
-
-                        val onActualizarFecha: () -> Unit = {
-                            selectedTaskIdForDate = id
-                            showDatePicker = true
-                        }
-
-                        val onEnviarABasura: () -> Unit = {
-                            taskIdToDelete = id
-                            showDeleteDialog = true
-                        }
-
-                        val onEliminar: () -> Unit = {
-                            db.collection("tasks").document(id)
-                                .delete()
-                                .addOnSuccessListener { cargarTareas() }
-                        }
-
-                        val onEditarClick: () -> Unit = {
-                            navController.navigate("recordatorio?taskId=$id")
-                        }
-
-                        val textoConFecha = if (fechaFormateada.isNotEmpty()) "$tituloBase - $fechaFormateada" else tituloBase
-
-                        SwipeableTaskItem(
-                            textoTarea = textoConFecha,
-                            isCafe = (index % 2 == 0),
-                            onCircleClick = onMarcarCompletada,
-                            onImportanteClick = onMarcarImportante,
-                            onFechaClick = onActualizarFecha,
-                            onBasuraClick = onEnviarABasura,
-                            onEliminar = onEliminar,
-                            onClick = onEditarClick
-                        )
-                    }
-
-                    if (tareasCompletadas.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Completadas (${tareasCompletadas.size})",
-                                color = Color(0xFFC7AF93),
-                                fontSize = 18.sp,
-                                fontFamily = InriaSerif,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 12.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-
-                        items(tareasCompletadas.size) { index ->
-                            val (id, tarea) = tareasCompletadas[index]
-                            val titulo = tarea["title"] as? String ?: "Sin título"
-
-                            val onRestaurarClick: () -> Unit = {
-                                selectedTaskIdForRestore = id
-                                showRestoreDialog = true
+                        if (tareasCompletadas.isNotEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Completadas (${tareasCompletadas.size})",
+                                    color = Color(0xFFC7AF93),
+                                    fontSize = 18.sp,
+                                    fontFamily = InriaSerif,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 12.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
                             }
 
-                            val onEliminar: () -> Unit = {
-                                db.collection("tasks").document(id)
-                                    .delete()
-                                    .addOnSuccessListener { cargarTareas() }
-                            }
+                            items(tareasCompletadas.size) { index ->
+                                val (id, tarea) = tareasCompletadas[index]
+                                val titulo = tarea["title"] as? String ?: "Sin título"
 
-                            RectanguloCompletadoPapelera(
-                                textoTarea = titulo,
-                                onDeleteClick = onEliminar,
-                                onClick = onRestaurarClick
-                            )
+                                val onRestaurarClick: () -> Unit = {
+                                    selectedTaskIdForRestore = id
+                                    showRestoreDialog = true
+                                }
+
+                                val onEliminar: () -> Unit = {
+                                    db.collection("tasks").document(id)
+                                        .delete()
+                                        .addOnSuccessListener { cargarTareas() }
+                                }
+
+                                RectanguloCompletadoPapelera(
+                                    textoTarea = titulo,
+                                    onDeleteClick = onEliminar,
+                                    onClick = onRestaurarClick
+                                )
+                            }
                         }
                     }
                 }
+
+                ImagenDerechaTextoIzquierda()
+                BottomNavBarPerfil(navController = navController)
             }
 
-            ImagenDerechaTextoIzquierda()
-            ParteAbajo(navController = navController)
-        }
+            if (showDatePicker) {
+                val datePickerState = rememberDatePickerState()
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                datePickerState.selectedDateMillis?.let { millis ->
+                                    selectedTaskIdForDate?.let { taskId ->
+                                        db.collection("tasks").document(taskId)
+                                            .update("dueDate", millis)
+                                            .addOnSuccessListener { cargarTareas() }
+                                    }
+                                }
+                                showDatePicker = false
+                            }
+                        ) {
+                            Text("Aceptar", fontFamily = InriaSerif)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) {
+                            Text("Cancelar", fontFamily = InriaSerif)
+                        }
+                    },
+                    colors = DatePickerDefaults.colors(containerColor = BackgroundColor)
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
 
-        if (showDatePicker) {
-            val datePickerState = rememberDatePickerState()
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                selectedTaskIdForDate?.let { taskId ->
-                                    db.collection("tasks").document(taskId)
-                                        .update("dueDate", millis)
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = {
+                        Text(text = "Eliminar tarea", fontFamily = InriaSerif, color = Color.White)
+                    },
+                    text = {
+                        Text(
+                            text = "¿Estás segura de que la quieres eliminar?",
+                            fontFamily = InriaSerif,
+                            color = Color.White
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                taskIdToDelete?.let { id ->
+                                    db.collection("tasks").document(id)
+                                        .delete()
                                         .addOnSuccessListener { cargarTareas() }
                                 }
+                                showDeleteDialog = false
+                                taskIdToDelete = null
                             }
-                            showDatePicker = false
+                        ) {
+                            Text("Sí, eliminar", color = Color(0xFFE57373), fontFamily = InriaSerif)
                         }
-                    ) {
-                        Text("Aceptar", fontFamily = InriaSerif)
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) {
-                        Text("Cancelar", fontFamily = InriaSerif)
-                    }
-                },
-                colors = DatePickerDefaults.colors(containerColor = BackgroundColor)
-            ) {
-                DatePicker(state = datePickerState)
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                showDeleteDialog = false
+                                taskIdToDelete = null
+                            }
+                        ) {
+                            Text("Cancelar", fontFamily = InriaSerif, color = Color.White)
+                        }
+                    },
+                    modifier = Modifier.background(
+                        BackgroundColor,
+                        shape = RoundedCornerShape(28.dp)
+                    )
+                )
+            }
+
+            if (showRestoreDialog) {
+                AlertDialog(
+                    onDismissRequest = { showRestoreDialog = false },
+                    title = {
+                        Text(text = "Restaurar tarea", fontFamily = InriaSerif, color = Color.White)
+                    },
+                    text = {
+                        Text(
+                            text = "¿Quieres restablecer esta tarea a su estado anterior?",
+                            fontFamily = InriaSerif,
+                            color = Color.White
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                selectedTaskIdForRestore?.let { id ->
+                                    db.collection("tasks").document(id)
+                                        .update("completed", false)
+                                        .addOnSuccessListener { cargarTareas() }
+                                }
+                                showRestoreDialog = false
+                                selectedTaskIdForRestore = null
+                            }
+                        ) {
+                            Text(
+                                "Sí, restablecer",
+                                color = Color(0xFFC7AF93),
+                                fontFamily = InriaSerif
+                            )
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                showRestoreDialog = false
+                                selectedTaskIdForRestore = null
+                            }
+                        ) {
+                            Text("Cancelar", fontFamily = InriaSerif, color = Color.White)
+                        }
+                    },
+                    modifier = Modifier.background(
+                        BackgroundColor,
+                        shape = RoundedCornerShape(28.dp)
+                    )
+                )
             }
         }
-
-        if (showDeleteDialog) {
-            AlertDialog(
-                onDismissRequest = { showDeleteDialog = false },
-                title = {
-                    Text(text = "Eliminar tarea", fontFamily = InriaSerif, color = Color.White)
-                },
-                text = {
-                    Text(text = "¿Estás segura de que la quieres eliminar?", fontFamily = InriaSerif, color = Color.White)
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            taskIdToDelete?.let { id ->
-                                db.collection("tasks").document(id)
-                                    .delete()
-                                    .addOnSuccessListener { cargarTareas() }
-                            }
-                            showDeleteDialog = false
-                            taskIdToDelete = null
-                        }
-                    ) {
-                        Text("Sí, eliminar", color = Color(0xFFE57373), fontFamily = InriaSerif)
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = {
-                            showDeleteDialog = false
-                            taskIdToDelete = null
-                        }
-                    ) {
-                        Text("Cancelar", fontFamily = InriaSerif, color = Color.White)
-                    }
-                },
-                modifier = Modifier.background(BackgroundColor, shape = RoundedCornerShape(28.dp))
-            )
-        }
-
-        if (showRestoreDialog) {
-            AlertDialog(
-                onDismissRequest = { showRestoreDialog = false },
-                title = {
-                    Text(text = "Restaurar tarea", fontFamily = InriaSerif, color = Color.White)
-                },
-                text = {
-                    Text(text = "¿Quieres restablecer esta tarea a su estado anterior?", fontFamily = InriaSerif, color = Color.White)
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            selectedTaskIdForRestore?.let { id ->
-                                db.collection("tasks").document(id)
-                                    .update("completed", false)
-                                    .addOnSuccessListener { cargarTareas() }
-                            }
-                            showRestoreDialog = false
-                            selectedTaskIdForRestore = null
-                        }
-                    ) {
-                        Text("Sí, restablecer", color = Color(0xFFC7AF93), fontFamily = InriaSerif)
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = {
-                            showRestoreDialog = false
-                            selectedTaskIdForRestore = null
-                        }
-                    ) {
-                        Text("Cancelar", fontFamily = InriaSerif, color = Color.White)
-                    }
-                },
-                modifier = Modifier.background(BackgroundColor, shape = RoundedCornerShape(28.dp))
-            )
-        }
     }
-}
+
+
     @Composable
     fun SwipeableTaskItem(
         textoTarea: String,
         isCafe: Boolean,
+        iconIndex: Int,
         onCircleClick: () -> Unit,
         onImportanteClick: () -> Unit,
         onFechaClick: () -> Unit,
@@ -584,8 +635,18 @@ fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(imageVector = Icons.Default.Star, contentDescription = "Importante", tint = contentColor, modifier = Modifier.size(18.dp))
-                        Text(text = "Importante", fontSize = 9.sp, color = contentColor, fontFamily = InriaSerif)
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Importante",
+                            tint = contentColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "Importante",
+                            fontSize = 9.sp,
+                            color = contentColor,
+                            fontFamily = InriaSerif
+                        )
                     }
                 }
 
@@ -600,8 +661,18 @@ fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(imageVector = Icons.Default.DateRange, contentDescription = "Fecha", tint = contentColor, modifier = Modifier.size(18.dp))
-                        Text(text = "Fecha", fontSize = 9.sp, color = contentColor, fontFamily = InriaSerif)
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Fecha",
+                            tint = contentColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "Fecha",
+                            fontSize = 9.sp,
+                            color = contentColor,
+                            fontFamily = InriaSerif
+                        )
                     }
                 }
 
@@ -616,8 +687,18 @@ fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Basura", tint = contentColor, modifier = Modifier.size(18.dp))
-                        Text(text = "Basura", fontSize = 9.sp, color = contentColor, fontFamily = InriaSerif)
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Basura",
+                            tint = contentColor,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text = "Basura",
+                            fontSize = 9.sp,
+                            color = contentColor,
+                            fontFamily = InriaSerif
+                        )
                     }
                 }
             }
@@ -664,9 +745,20 @@ fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
                             .clickable { onCircleClick() }
                     )
 
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Icon(
+                        imageVector = getIconFromIndex(iconIndex),
+                        contentDescription = null,
+                        tint = if (isCafe) Color.Black else Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
+
                     Text(
                         text = textoTarea,
-                        modifier = Modifier.padding(start = 16.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 12.dp),
                         color = if (isCafe) Color.Black else Color.White,
                         fontFamily = InriaSerif,
                         fontSize = 18.sp
@@ -675,6 +767,7 @@ fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
             }
         }
     }
+
     @Composable
     fun RectanguloConImagen() {
         Box(
@@ -954,15 +1047,15 @@ fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
                 tint = TextBeigea,
                 modifier = Modifier
                     .size(26.dp)
-                    .clickable { /* Opcional: Ruta al calendario si aplica */ }
+                    .clickable { /* Ruta al calendario si aplica */ }
             )
             Icon(
-                imageVector = Icons.Default.Cloud,
-                contentDescription = "Clima",
+                imageVector = Icons.Default.SmartToy,
+                contentDescription = "IA",
                 tint = TextBeigea,
                 modifier = Modifier
                     .size(26.dp)
-                    .clickable { /* Opcional: Ruta al clima si aplica */ }
+                    .clickable { /* Ruta a la IA */ }
             )
 
             Box(
@@ -986,9 +1079,9 @@ fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
                 imageVector = Icons.Default.CheckCircle,
                 contentDescription = "Completado",
                 tint = TextBeigea,
-                modifier = Modifier
-                    .size(26.dp)
+                modifier = Modifier.size(26.dp)
             )
+
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = "Perfil",
@@ -996,16 +1089,92 @@ fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .size(26.dp)
                     .clickable {
-                        // navController.navigate("perfil")
+                        navController.navigate("perfil")
                     }
             )
         }
     }
-//@Preview(showBackground = true)
-//@Composable
-//fun GreetingPreview() {
-//    LuhikawaTheme {
-//        Greeting()
-//    }
-//}
-//}
+}
+
+@Composable
+fun ImportantTaskCard(
+    taskId: String,
+    title: String,
+    time: String,
+    iconIndex: Int,
+    isCompleted: Boolean,
+    onTaskCheckedChange: (Boolean) -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = BgDarka),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(BgBeigea.copy(alpha = 0.2f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = getIconFromIndex(iconIndex),
+                        contentDescription = null,
+                        tint = BgBeigea,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column {
+                    Text(
+                        text = title,
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = InriaSerif
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = time,
+                        color = Color.Gray,
+                        fontSize = 13.sp
+                    )
+                }
+            }
+
+            IconButton(
+                onClick = {
+                    val newState = !isCompleted
+                    db.collection("tasks").document(taskId)
+                        .update("completed", newState)
+                        .addOnSuccessListener {
+                            onTaskCheckedChange(newState)
+                        }
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Completar tarea",
+                    tint = if (isCompleted) Color(0xFF4CAF50) else Color.Gray,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+    }
+}

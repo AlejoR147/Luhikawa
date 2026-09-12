@@ -1,8 +1,7 @@
 package com.example.luhikawa
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
@@ -21,8 +20,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
@@ -37,15 +38,22 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,10 +73,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import java.util.Calendar
 import com.google.firebase.firestore.FirebaseFirestore
-import android.widget.Toast
-import androidx.compose.runtime.LaunchedEffect
+
 
 val BgDark = Color(0xFF1A1717)
 val BgBeige = Color(0xFFC7AF93)
@@ -95,6 +101,7 @@ class MainActivityH : ComponentActivity() {
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun RecordatorioScreen(navController: NavController, taskId: String? = null) {
     var reminderName by remember { mutableStateOf("") }
@@ -102,14 +109,16 @@ fun RecordatorioScreen(navController: NavController, taskId: String? = null) {
     var selectedImportance by remember { mutableStateOf("Alta") }
 
     val context = LocalContext.current
-    val calendar = Calendar.getInstance()
-    var selectedDate by remember { mutableStateOf("15 Oct 2023") }
+    var selectedDate by remember { mutableStateOf("15 Oct 2026") }
     var selectedTime by remember { mutableStateOf("16:00") }
 
     var selectedCategory by remember { mutableStateOf("Trabajo") }
     var selectedFrequency by remember { mutableStateOf("Todos los días") }
 
     val db = FirebaseFirestore.getInstance()
+
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(taskId) {
         if (!taskId.isNullOrEmpty()) {
@@ -118,7 +127,7 @@ fun RecordatorioScreen(navController: NavController, taskId: String? = null) {
                     if (document.exists()) {
                         reminderName = document.getString("title") ?: ""
                         selectedCategory = document.getString("category") ?: "Trabajo"
-                        selectedDate = document.getString("date") ?: "15 Oct 2023"
+                        selectedDate = document.getString("date") ?: "15 Oct 2026"
                         selectedTime = document.getString("time") ?: "16:00"
                         selectedImportance = document.getString("importance") ?: "Alta"
                         selectedIcon = (document.getLong("icon") ?: 0L).toInt()
@@ -131,195 +140,368 @@ fun RecordatorioScreen(navController: NavController, taskId: String? = null) {
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BgDarka)
-    ) {
-        HeaderSection()
-
+    Box(modifier = Modifier.fillMaxSize().background(BgDarka)) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
-                .padding(top = 16.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxSize()
         ) {
+            HeaderSection()
+
             Column(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 16.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // 🏷️ Cambia el título dependiendo de si estamos editando o creando
-                NuevoRecordatorioHeader(isEditing = !taskId.isNullOrEmpty())
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Text(
-                    text = "Detalles",
-                    style = TextStyle(
-                        fontFamily = InriaSerif,
-                        fontSize = 26.sp,
-                        color = TextBeigea
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                InputLabel(text = "Nombre del recordatorio")
-                Spacer(modifier = Modifier.height(6.dp))
-                OutlinedTextFieldCustom(
-                    value = reminderName,
-                    onValueChange = { reminderName = it },
-                    placeholder = "Ej: Cita con el dentista"
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                InputLabel(text = "Ícono")
-                Spacer(modifier = Modifier.height(6.dp))
-                IconSelector(
-                    selectedIndex = selectedIcon,
-                    onIconSelected = { selectedIcon = it }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                InputLabel(text = "Importancia")
-                Spacer(modifier = Modifier.height(6.dp))
-                ImportanceSelector(
-                    selectedOption = selectedImportance,
-                    onOptionSelected = { selectedImportance = it }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                InputLabel(text = "Fecha y Hora")
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    DateTimeSelector(
-                        icon = Icons.Outlined.CalendarMonth,
-                        text = selectedDate,
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable {
-                                DatePickerDialog(
-                                    context,
-                                    { _, year, month, dayOfMonth ->
-                                        val months = arrayOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
-                                        selectedDate = "$dayOfMonth ${months[month]} $year"
-                                    },
-                                    calendar.get(Calendar.YEAR),
-                                    calendar.get(Calendar.MONTH),
-                                    calendar.get(Calendar.DAY_OF_MONTH)
-                                ).show()
-                            }
+                    NuevoRecordatorioHeader(isEditing = !taskId.isNullOrEmpty())
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Detalles",
+                        style = TextStyle(
+                            fontFamily = InriaSerif,
+                            fontSize = 26.sp,
+                            color = TextBeigea
+                        )
                     )
 
-                    DateTimeSelector(
-                        icon = Icons.Default.Schedule,
-                        text = selectedTime,
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable {
-                                TimePickerDialog(
-                                    context,
-                                    { _, hourOfDay, minute ->
-                                        selectedTime = String.format("%02d:%02d", hourOfDay, minute)
-                                    },
-                                    calendar.get(Calendar.HOUR_OF_DAY),
-                                    calendar.get(Calendar.MINUTE),
-                                    true
-                                ).show()
-                            }
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    InputLabel(text = "Nombre del recordatorio")
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextFieldCustom(
+                        value = reminderName,
+                        onValueChange = { reminderName = it },
+                        placeholder = "Ej: Cita con el dentista"
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    InputLabel(text = "Ícono")
+                    Spacer(modifier = Modifier.height(6.dp))
+                    IconSelector(
+                        selectedIndex = selectedIcon,
+                        onIconSelected = { selectedIcon = it }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    InputLabel(text = "Importancia")
+                    Spacer(modifier = Modifier.height(6.dp))
+                    ImportanceSelector(
+                        selectedOption = selectedImportance,
+                        onOptionSelected = { selectedImportance = it }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    InputLabel(text = "Fecha y Hora")
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { showDatePicker = true }
+                        ) {
+                            DateTimeSelector(
+                                icon = Icons.Outlined.CalendarMonth,
+                                text = selectedDate,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { showTimePicker = true }
+                        ) {
+                            DateTimeSelector(
+                                icon = Icons.Default.Schedule,
+                                text = selectedTime,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    InputLabel(text = "Clasificación")
+                    Spacer(modifier = Modifier.height(6.dp))
+                    IndexStyleCategorySelector(
+                        selectedCategory = selectedCategory,
+                        onCategorySelected = { selectedCategory = it }
+                    )
+
+                    if (selectedCategory == "Hábitos") {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        InputLabel(text = "Frecuencia de repetición")
+                        Spacer(modifier = Modifier.height(6.dp))
+                        FrequencySelector(
+                            selectedOption = selectedFrequency,
+                            onOptionSelected = { selectedFrequency = it }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
-                InputLabel(text = "Clasificación")
-                Spacer(modifier = Modifier.height(6.dp))
-                IndexStyleCategorySelector(
-                    selectedCategory = selectedCategory,
-                    onCategorySelected = { selectedCategory = it }
-                )
+                Button(
+                    onClick = {
+                        if (reminderName.isNotBlank()) {
+                            val dueDateMillis = try {
+                                val sdf = java.text.SimpleDateFormat(
+                                    "d MMM yyyy",
+                                    java.util.Locale("es", "ES")
+                                )
+                                sdf.parse(selectedDate)?.time ?: System.currentTimeMillis()
+                            } catch (e: Exception) {
+                                System.currentTimeMillis()
+                            }
 
-                if (selectedCategory == "Hábitos") {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    InputLabel(text = "Frecuencia de repetición")
-                    Spacer(modifier = Modifier.height(6.dp))
-                    FrequencySelector(
-                        selectedOption = selectedFrequency,
-                        onOptionSelected = { selectedFrequency = it }
+                            val taskMap = mutableMapOf<String, Any>(
+                                "title" to reminderName,
+                                "category" to if (selectedCategory == "Todo") "Tareas" else selectedCategory,
+                                "date" to selectedDate,
+                                "dueDate" to dueDateMillis,
+                                "time" to selectedTime,
+                                "importance" to selectedImportance,
+                                "icon" to selectedIcon,
+                                "completed" to false
+                            )
+
+                            if (selectedCategory == "Hábitos") {
+                                taskMap["frequency"] = selectedFrequency
+                            }
+
+                            if (!taskId.isNullOrEmpty()) {
+                                db.collection("tasks").document(taskId)
+                                    .update(taskMap)
+                                    .addOnSuccessListener {
+                                        Toast.makeText(
+                                            context,
+                                            "¡Actualizado con éxito!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        navController.popBackStack()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(
+                                            context,
+                                            "Error al actualizar: ${e.localizedMessage}",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                            } else {
+                                db.collection("tasks")
+                                    .add(taskMap)
+                                    .addOnSuccessListener {
+                                        Toast.makeText(
+                                            context,
+                                            "¡Guardado con éxito!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        navController.popBackStack()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(
+                                            context,
+                                            "Error al guardar: ${e.localizedMessage}",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                            }
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Por favor escribe un nombre",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BgBeigea,
+                        contentColor = TextDarka
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = if (!taskId.isNullOrEmpty()) "ACTUALIZAR" else "GUARDAR",
+                        style = TextStyle(
+                            fontFamily = InriaSerif,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                 }
             }
+        }
 
-            Button(
-                onClick = {
-                    if (reminderName.isNotBlank()) {
-                        val taskMap = mutableMapOf<String, Any>(
-                            "title" to reminderName,
-                            "category" to if (selectedCategory == "Todo") "Tareas" else selectedCategory,
-                            "date" to selectedDate,
-                            "time" to selectedTime,
-                            "importance" to selectedImportance,
-                            "icon" to selectedIcon,
-                            "isCompleted" to false
-                        )
-
-                        if (selectedCategory == "Hábitos") {
-                            taskMap["frequency"] = selectedFrequency
+        if (showDatePicker) {
+            val datePickerState = rememberDatePickerState()
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                val calendar =
+                                    java.util.Calendar.getInstance().apply { timeInMillis = millis }
+                                val year = calendar.get(java.util.Calendar.YEAR)
+                                val month = calendar.get(java.util.Calendar.MONTH)
+                                val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                                val months = arrayOf(
+                                    "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+                                    "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+                                )
+                                selectedDate = "$day ${months[month]} $year"
+                            }
+                            showDatePicker = false
                         }
-
-                        if (!taskId.isNullOrEmpty()) {
-                            // 🔄 Actualizamos la tarea existente en lugar de crear una nueva
-                            db.collection("tasks").document(taskId)
-                                .update(taskMap)
-                                .addOnSuccessListener {
-                                    Toast.makeText(context, "¡Actualizado con éxito!", Toast.LENGTH_SHORT).show()
-                                    navController.popBackStack()
-                                }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(context, "Error al actualizar: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                                }
-                        } else {
-                            // ➕ Creamos una tarea nueva
-                            db.collection("tasks")
-                                .add(taskMap)
-                                .addOnSuccessListener {
-                                    Toast.makeText(context, "¡Guardado con éxito!", Toast.LENGTH_SHORT).show()
-                                    navController.popBackStack()
-                                }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(context, "Error al guardar: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                                }
-                        }
-                    } else {
-                        Toast.makeText(context, "Por favor escribe un nombre", Toast.LENGTH_SHORT).show()
+                    ) {
+                        Text("Aceptar", fontFamily = InriaSerif)
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = BgBeigea,
-                    contentColor = TextDarka
-                ),
-                shape = RoundedCornerShape(8.dp)
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text("Cancelar", fontFamily = InriaSerif)
+                    }
+                },
+                colors = DatePickerDefaults.colors(containerColor = BackgroundColor)
             ) {
-                Text(
-                    text = if (!taskId.isNullOrEmpty()) "ACTUALIZAR" else "GUARDAR",
-                    style = TextStyle(
+                DatePicker(state = datePickerState)
+            }
+        }
+
+        if (showTimePicker) {
+            var selectedHour by remember { mutableStateOf(16) }
+            var selectedMinute by remember { mutableStateOf(0) }
+
+            AlertDialog(
+                onDismissRequest = { showTimePicker = false },
+                containerColor = BgDarka,
+                title = {
+                    Text(
+                        text = "Seleccionar Hora",
                         fontFamily = InriaSerif,
-                        fontSize = 18.sp,
+                        color = TextBeigea,
                         fontWeight = FontWeight.Bold
                     )
-                )
-            }
+                },
+                text = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = String.format("%02d", if (selectedHour == 0) 23 else selectedHour - 1),
+                                color = Color.Gray.copy(alpha = 0.4f),
+                                fontSize = 22.sp,
+                                modifier = Modifier
+                                    .clickable { selectedHour = if (selectedHour == 0) 23 else selectedHour - 1 }
+                                    .padding(8.dp)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = String.format("%02d", selectedHour),
+                                    color = Color.White,
+                                    fontSize = 40.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(text = "h", color = Color.Gray, fontSize = 14.sp)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = String.format("%02d", if (selectedHour == 23) 0 else selectedHour + 1),
+                                color = Color.Gray.copy(alpha = 0.4f),
+                                fontSize = 22.sp,
+                                modifier = Modifier
+                                    .clickable { selectedHour = if (selectedHour == 23) 0 else selectedHour + 1 }
+                                    .padding(8.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(text = ":", color = Color.White, fontSize = 36.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = String.format("%02d", if (selectedMinute == 0) 59 else selectedMinute - 1),
+                                color = Color.Gray.copy(alpha = 0.4f),
+                                fontSize = 22.sp,
+                                modifier = Modifier
+                                    .clickable { selectedMinute = if (selectedMinute == 0) 59 else selectedMinute - 1 }
+                                    .padding(8.dp)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = String.format("%02d", selectedMinute),
+                                    color = Color.White,
+                                    fontSize = 40.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(text = "m", color = Color.Gray, fontSize = 14.sp)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = String.format("%02d", if (selectedMinute == 59) 0 else selectedMinute + 1),
+                                color = Color.Gray.copy(alpha = 0.4f),
+                                fontSize = 22.sp,
+                                modifier = Modifier
+                                    .clickable { selectedMinute = if (selectedMinute == 59) 0 else selectedMinute + 1 }
+                                    .padding(8.dp)
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            selectedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
+                            showTimePicker = false
+                        }
+                    ) {
+                        Text("Aceptar", fontFamily = InriaSerif, color = BgBeigea, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showTimePicker = false }) {
+                        Text("Cancelar", fontFamily = InriaSerif, color = Color.Gray)
+                    }
+                }
+            )
         }
     }
 }
+
+fun getIconFromIndex(index: Int): ImageVector {
+    return when (index) {
+        0 -> Icons.Outlined.Notifications
+        1 -> Icons.Default.FitnessCenter
+        2 -> Icons.Default.Medication
+        3 -> Icons.Default.WaterDrop
+        4 -> Icons.Default.DirectionsCar
+        else -> Icons.Outlined.Notifications
+    }
+}
+
 
 @Composable
 fun NuevoRecordatorioHeader(isEditing: Boolean = false) {
