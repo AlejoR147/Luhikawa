@@ -191,8 +191,12 @@ class MainActivity : ComponentActivity() {
         }
 
         val tareasImportantes = listaDeTareas.filter { (_, tarea) ->
-            tarea["important"] as? Boolean ?: false
+            val completada = tarea["completed"] as? Boolean ?: false
+            val importante = tarea["important"] as? Boolean ?: false
+            importante && !completada
         }
+
+
 
         val tareasActivas = listaDeTareas.filter { (_, tarea) ->
             val completada = tarea["completed"] as? Boolean ?: false
