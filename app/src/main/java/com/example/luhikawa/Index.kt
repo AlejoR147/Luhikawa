@@ -87,6 +87,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import androidx.compose.ui.text.style.TextOverflow
 
 
 val BackgroundColor = Color(0xFF1A1717)
@@ -114,6 +115,10 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable(route = "greeting") {
                             Greeting(navController = navController)
+                        }
+
+                        composable(route = "calendario") {
+                            CalendarScreen(navController = navController)
                         }
 
                         composable(
@@ -196,12 +201,21 @@ class MainActivity : ComponentActivity() {
             importante && !completada
         }
 
-
-
         val tareasActivas = listaDeTareas.filter { (_, tarea) ->
             val completada = tarea["completed"] as? Boolean ?: false
             val importante = tarea["important"] as? Boolean ?: false
             !completada && !importante
+        }
+
+        val tareasActivasOrdenadas = tareasActivas.sortedWith { a, b ->
+            val fechaA = a.second["dueDate"] as? String
+            val fechaB = b.second["dueDate"] as? String
+            when {
+                fechaA == null && fechaB == null -> 0
+                fechaA == null -> 1
+                fechaB == null -> -1
+                else -> fechaA.compareTo(fechaB)
+            }
         }
 
         val tareasCompletadas = listaDeTareas.filter { (_, tarea) ->
@@ -287,15 +301,14 @@ class MainActivity : ComponentActivity() {
                             items(tareasImportantes.size) { index ->
                                 val (id, tarea) = tareasImportantes[index]
                                 val tituloBase = tarea["title"] as? String ?: "Sin título"
-                                val dueDateMillis = tarea["dueDate"] as? Long
-                                val fechaFormateada = formatearFecha(dueDateMillis)
+                                val fechaLegible = tarea["date"] as? String ?: ""
                                 val horaFormateada = tarea["time"] as? String ?: ""
                                 val esImportante = true
                                 val iconIndex = (tarea["icon"] as? Long)?.toInt() ?: 0
 
                                 val infoTiempo = buildString {
-                                    if (fechaFormateada.isNotEmpty()) append(fechaFormateada)
-                                    if (fechaFormateada.isNotEmpty() && horaFormateada.isNotEmpty()) append(" • ")
+                                    if (fechaLegible.isNotEmpty()) append(fechaLegible)
+                                    if (fechaLegible.isNotEmpty() && horaFormateada.isNotEmpty()) append(" • ")
                                     if (horaFormateada.isNotEmpty()) append(horaFormateada)
                                 }
 
@@ -336,6 +349,7 @@ class MainActivity : ComponentActivity() {
 
                                 SwipeableTaskItem(
                                     textoTarea = textoConFecha,
+                                    fechaTarea = tarea["date"] as? String,
                                     isCafe = (index % 2 == 0),
                                     iconIndex = iconIndex,
                                     onCircleClick = onMarcarCompletada,
@@ -352,18 +366,17 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        items(tareasActivas.size) { index ->
-                            val (id, tarea) = tareasActivas[index]
+                        items(tareasActivasOrdenadas.size) { index ->
+                            val (id, tarea) = tareasActivasOrdenadas[index]
                             val tituloBase = tarea["title"] as? String ?: "Sin título"
-                            val dueDateMillis = tarea["dueDate"] as? Long
-                            val fechaFormateada = formatearFecha(dueDateMillis)
+                            val fechaLegible = tarea["date"] as? String ?: ""
                             val horaFormateada = tarea["time"] as? String ?: ""
                             val esImportante = tarea["important"] as? Boolean ?: false
-                            val iconIndex = (tarea["icon"] as? Long)?.toInt() ?: 0   // <-- CORREGIDO
+                            val iconIndex = (tarea["icon"] as? Long)?.toInt() ?: 0
 
                             val infoTiempo = buildString {
-                                if (fechaFormateada.isNotEmpty()) append(fechaFormateada)
-                                if (fechaFormateada.isNotEmpty() && horaFormateada.isNotEmpty()) append(" • ")
+                                if (fechaLegible.isNotEmpty()) append(fechaLegible)
+                                if (fechaLegible.isNotEmpty() && horaFormateada.isNotEmpty()) append(" • ")
                                 if (horaFormateada.isNotEmpty()) append(horaFormateada)
                             }
 
@@ -404,8 +417,9 @@ class MainActivity : ComponentActivity() {
 
                             SwipeableTaskItem(
                                 textoTarea = textoConFecha,
+                                fechaTarea = tarea["date"] as? String,
                                 isCafe = (index % 2 == 0),
-                                iconIndex = iconIndex,   // <-- CORREGIDO
+                                iconIndex = iconIndex,
                                 onCircleClick = onMarcarCompletada,
                                 onImportanteClick = onMarcarImportante,
                                 onFechaClick = onActualizarFecha,
@@ -467,8 +481,14 @@ class MainActivity : ComponentActivity() {
                             onClick = {
                                 datePickerState.selectedDateMillis?.let { millis ->
                                     selectedTaskIdForDate?.let { taskId ->
+                                        val fecha = java.time.Instant.ofEpochMilli(millis)
+                                            .atZone(java.time.ZoneOffset.UTC)
+                                            .toLocalDate()
+                                        val fechaIso = "%04d-%02d-%02d".format(
+                                            fecha.year, fecha.monthValue, fecha.dayOfMonth
+                                        )
                                         db.collection("tasks").document(taskId)
-                                            .update("dueDate", millis)
+                                            .update("dueDate", fechaIso)
                                             .addOnSuccessListener { cargarTareas() }
                                     }
                                 }
@@ -586,9 +606,11 @@ class MainActivity : ComponentActivity() {
     }
 
 
+
     @Composable
     fun SwipeableTaskItem(
         textoTarea: String,
+        fechaTarea: String? = null,
         isCafe: Boolean,
         iconIndex: Int,
         onCircleClick: () -> Unit,
@@ -758,19 +780,34 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.size(22.dp)
                     )
 
-                    Text(
-                        text = textoTarea,
+                    Column(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(start = 12.dp),
-                        color = if (isCafe) Color.Black else Color.White,
-                        fontFamily = InriaSerif,
-                        fontSize = 18.sp
-                    )
+                            .padding(start = 12.dp)
+                    ) {
+                        Text(
+                            text = textoTarea,
+                            color = if (isCafe) Color.Black else Color.White,
+                            fontFamily = InriaSerif,
+                            fontSize = 18.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        if (!fechaTarea.isNullOrEmpty()) {
+                            Text(
+                                text = fechaTarea,
+                                color = if (isCafe) Color.Black.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.6f),
+                                fontFamily = InriaSerif,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
                 }
             }
         }
     }
+
 
     @Composable
     fun RectanguloConImagen() {

@@ -657,7 +657,7 @@ fun BottomNavBarPerfil(navController: NavController) {
             icon = Icons.Default.CalendarMonth,
             contentDescription = "Calendario",
             tint = Color.White,
-            onClick = { /* Acción de calendario si la tienes */ }
+            onClick = { navController.navigate("calendario") }
         )
 
         BottomNavItem(

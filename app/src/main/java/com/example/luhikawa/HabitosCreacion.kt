@@ -256,21 +256,21 @@ fun RecordatorioScreen(navController: NavController, taskId: String? = null) {
                 Button(
                     onClick = {
                         if (reminderName.isNotBlank()) {
-                            val dueDateMillis = try {
-                                val sdf = java.text.SimpleDateFormat(
-                                    "d MMM yyyy",
-                                    java.util.Locale("es", "ES")
-                                )
-                                sdf.parse(selectedDate)?.time ?: System.currentTimeMillis()
-                            } catch (e: Exception) {
-                                System.currentTimeMillis()
-                            }
+                            val dateParts = selectedDate.split(" ")
+                            val monthMap = mapOf(
+                                "Ene" to 1, "Feb" to 2, "Mar" to 3, "Abr" to 4, "May" to 5, "Jun" to 6,
+                                "Jul" to 7, "Ago" to 8, "Sep" to 9, "Oct" to 10, "Nov" to 11, "Dic" to 12
+                            )
+                            val day = dateParts[0].toInt()
+                            val month = monthMap[dateParts[1]] ?: 1
+                            val year = dateParts[2].toInt()
+                            val fechaIso = "%04d-%02d-%02d".format(year, month, day)
 
                             val taskMap = mutableMapOf<String, Any>(
                                 "title" to reminderName,
                                 "category" to if (selectedCategory == "Todo") "Tareas" else selectedCategory,
                                 "date" to selectedDate,
-                                "dueDate" to dueDateMillis,
+                                "dueDate" to fechaIso,
                                 "time" to selectedTime,
                                 "importance" to selectedImportance,
                                 "icon" to selectedIcon,
@@ -355,16 +355,17 @@ fun RecordatorioScreen(navController: NavController, taskId: String? = null) {
                     TextButton(
                         onClick = {
                             datePickerState.selectedDateMillis?.let { millis ->
-                                val calendar =
-                                    java.util.Calendar.getInstance().apply { timeInMillis = millis }
-                                val year = calendar.get(java.util.Calendar.YEAR)
-                                val month = calendar.get(java.util.Calendar.MONTH)
-                                val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                                val fecha = java.time.Instant.ofEpochMilli(millis)
+                                    .atZone(java.time.ZoneOffset.UTC)   // <-- cambio clave
+                                    .toLocalDate()
+                                val year = fecha.year
+                                val month = fecha.monthValue
+                                val day = fecha.dayOfMonth
                                 val months = arrayOf(
                                     "Ene", "Feb", "Mar", "Abr", "May", "Jun",
                                     "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
                                 )
-                                selectedDate = "$day ${months[month]} $year"
+                                selectedDate = "$day ${months[month - 1]} $year"
                             }
                             showDatePicker = false
                         }
@@ -372,7 +373,8 @@ fun RecordatorioScreen(navController: NavController, taskId: String? = null) {
                         Text("Aceptar", fontFamily = InriaSerif)
                     }
                 },
-                dismissButton = {
+
+                        dismissButton = {
                     TextButton(onClick = { showDatePicker = false }) {
                         Text("Cancelar", fontFamily = InriaSerif)
                     }
@@ -490,6 +492,7 @@ fun RecordatorioScreen(navController: NavController, taskId: String? = null) {
         }
     }
 }
+
 
 fun getIconFromIndex(index: Int): ImageVector {
     return when (index) {
