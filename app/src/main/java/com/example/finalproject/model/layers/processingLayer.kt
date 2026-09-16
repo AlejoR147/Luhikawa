@@ -6,6 +6,7 @@ class processingLayer {
     private var dataPackage = mutableListOf<Double>()
 
     fun processing (dataInputLayer : List<Double>, neuronsNetwork: List<Neuron>):  List<Double>{
+        dataPackage.clear()
         var contador = 0
         for (i in neuronsNetwork) {
 

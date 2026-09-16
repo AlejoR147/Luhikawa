@@ -5,7 +5,7 @@ class Neuron() {
     private var weight = 0.5
     private var result: Double = 0.0
     private var breach: Double = 2.0
-    private val activation : Activation = TODO()
+    private val activation : Activation = Activation()
 
     fun setDefault (){
         weight = 0.5

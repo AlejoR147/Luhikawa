@@ -63,16 +63,17 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            var currentScreen by remember { mutableStateOf("home") }
+            
             FinalProjectTheme() {
-                Greeting()
-                RecordatorioScreen()
-                //LoginScreen()
-                //CalendarScreen()
-                AiScreen()
-                RegistroScreen()
-                TareaScreen()
-                //PerfilScreen()
-
+                when (currentScreen) {
+                    "home" -> Greeting(onNavigate = { currentScreen = it })
+                    "habitos" -> RecordatorioScreen()
+                    "ia" -> AiScreen()
+                    "registro" -> RegistroScreen()
+                    "tareas" -> TareaScreen()
+                    else -> Greeting(onNavigate = { currentScreen = it })
+                }
             }
         }
     }
@@ -80,7 +81,7 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun Greeting(modifier: Modifier = Modifier) {
+fun Greeting(onNavigate: (String) -> Unit = {}, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -118,7 +119,7 @@ fun Greeting(modifier: Modifier = Modifier) {
             RectanguloNoCafe(textoTarea = "Estudiar para el examen")
         }
         ImagenDerechaTextoIzquierda()
-        ParteAbajo()
+        ParteAbajo(onNavigate = onNavigate)
     }
 }
 @Composable
@@ -326,7 +327,7 @@ fun ImagenDerechaTextoIzquierda() {
 }
 
 @Composable
-fun ParteAbajo() {
+fun ParteAbajo(onNavigate: (String) -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -338,19 +339,24 @@ fun ParteAbajo() {
             imageVector = ImageVector.vectorResource(R.drawable.calendar_month_24),
             contentDescription = "Calendario",
             tint = TextBeige3,
-            modifier = Modifier.size(26.dp)
+            modifier = Modifier
+                .size(26.dp)
+                .clickable { onNavigate("home") }
         )
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.cloud_24),
-            contentDescription = "Clima",
+            contentDescription = "IA",
             tint = TextBeige3,
-            modifier = Modifier.size(26.dp)
+            modifier = Modifier
+                .size(26.dp)
+                .clickable { onNavigate("ia") }
         )
 
         Box(
             modifier = Modifier
                 .size(50.dp)
-                .border(1.dp, AccentBorder3, CircleShape),
+                .border(1.dp, AccentBorder3, CircleShape)
+                .clickable { onNavigate("tareas") },
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -365,13 +371,17 @@ fun ParteAbajo() {
             imageVector = ImageVector.vectorResource(R.drawable.check_circle_24),
             contentDescription = "Completado",
             tint = TextBeige3,
-            modifier = Modifier.size(26.dp)
+            modifier = Modifier
+                .size(26.dp)
+                .clickable { onNavigate("habitos") }
         )
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.person_24),
             contentDescription = "Perfil",
             tint = TextBeige3,
-            modifier = Modifier.size(26.dp)
+            modifier = Modifier
+                .size(26.dp)
+                .clickable { onNavigate("registro") }
         )
     }
 }

@@ -1,7 +1,5 @@
 package com.example.finalproject.model.neurons
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.finalproject.model.layers.InputLayer
 import com.example.finalproject.model.layers.processingLayer
 import com.example.finalproject.model.layers.exitLayer
@@ -27,11 +25,11 @@ class network {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun network (data: List<Any>) {
+    fun network (data: List<Any>): List<Double> {
         dataInputPackage = inputLayer.validatedData(data).toList()
         dataPackage = processingLayer.processing(dataInputPackage, neuronsNetwork)
         exitLayer.interpreter(dataPackage)
+        return dataPackage
     }
 
 }
