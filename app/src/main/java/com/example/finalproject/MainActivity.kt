@@ -64,13 +64,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FinalProjectTheme() {
-               // Greeting()
-                //RecordatorioScreen()
+                Greeting()
+                RecordatorioScreen()
                 //LoginScreen()
-//                CalendarScreen()
-//                AiScreen()
-                //RegistroScreen()
-//                TareaScreen()
+                //CalendarScreen()
+                AiScreen()
+                RegistroScreen()
+                TareaScreen()
                 //PerfilScreen()
 
             }
