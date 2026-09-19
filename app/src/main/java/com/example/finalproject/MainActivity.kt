@@ -1,6 +1,7 @@
 package com.example.finalproject
 
 import android.os.Bundle
+import com.example.luhikawa.R
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -53,7 +54,9 @@ import com.example.finalproject.UI.*
 import androidx.compose.material3.*
 
 val BackgroundColor = Color(0xFF1A1717)
-val AccentColor3 = Color(0xFFC7AF93)
+val AccentColor32 = Color(0xFFC7AF93)
+val TextBeige3 = Color(0xFFC7AF93)
+val AccentBorder3 = Color(0xFFC7AF93)
 
 val InriaSerif = FontFamily(
     Font(R.font.inriaserif_regular)
@@ -68,10 +71,7 @@ class MainActivity : ComponentActivity() {
             FinalProjectTheme() {
                 when (currentScreen) {
                     "home" -> Greeting(onNavigate = { currentScreen = it })
-                    "habitos" -> RecordatorioScreen()
-                    "ia" -> AiScreen()
-                    "registro" -> RegistroScreen()
-                    "tareas" -> TareaScreen()
+
                     else -> Greeting(onNavigate = { currentScreen = it })
                 }
             }

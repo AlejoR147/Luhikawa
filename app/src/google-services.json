@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "550323438631",
+    "project_id": "luhikawa",
+    "storage_bucket": "luhikawa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:550323438631:android:3904b9f2e2dad92b1afa02",
+        "android_client_info": {
+          "package_name": "com.example.luhikawa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlooOoPlD6OmqN8nElKBikqbXw2kppgMs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

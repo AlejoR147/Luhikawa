@@ -36,7 +36,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.finalproject.R
+import com.example.luhikawa.R
 
 val BgDark3 = Color(0xFF1A1717)
 val BgBeige3 = Color(0xFFC7AF93)
@@ -180,42 +180,6 @@ fun AiScreen() {
                         modifier = Modifier.size(20.dp)
                     )
                 }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BottomNavItem(icon = ImageVector.vectorResource(R.drawable.date_range_24), label = "Hábitos", isSelected = false)
-                BottomNavItem(icon = ImageVector.vectorResource(R.drawable.cloud_24), label = "Hábitos", isSelected = false)
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(4.dp)
-                ) {
-                    Text(
-                        text = "AI",
-                        style = TextStyle(
-                            fontFamily = FontFamily.Serif,
-                            fontSize = 18.sp,
-                            color = TextBeige3,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Text(
-                        text = "IA",
-                        style = TextStyle(
-                            fontSize = 10.sp,
-                            color = TextBeige3
-                        )
-                    )
-                }
-
-                BottomNavItem(icon = ImageVector.vectorResource(R.drawable.person_24), label = "Perfiles", isSelected = false)
-                BottomNavItem(icon = ImageVector.vectorResource(R.drawable.check_circle_24), label = "Recordatorios", isSelected = false)
             }
         }
     }
