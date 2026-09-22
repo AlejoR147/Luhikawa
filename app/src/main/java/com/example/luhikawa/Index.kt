@@ -82,11 +82,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.luhikawa.ui.theme.LuhikawaTheme
+import com.example.finalproject.UI.AiScreen
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.Calendar
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.text.style.TextOverflow
 
 
@@ -108,39 +113,59 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentRoute = navBackStackEntry?.destination?.route
 
-                    NavHost(
-                        navController = navController,
-                        startDestination = "greeting"
-                    ) {
-                        composable(route = "greeting") {
-                            Greeting(navController = navController)
+                    Scaffold(
+                        bottomBar = {
+                            if (currentRoute != "login" && currentRoute != "registro") {
+                                ParteAbajo(navController = navController)
+                            }
                         }
+                    ) { innerPadding ->
+                        NavHost(
+                            navController = navController,
+                            startDestination = "greeting",
+                            modifier = Modifier.padding(innerPadding)
+                        ) {
+                            composable(route = "greeting") {
+                                Greeting(navController = navController)
+                            }
 
-                        composable(route = "calendario") {
-                            CalendarScreen(navController = navController)
+                            composable(route = "calendario") {
+                                CalendarScreen(navController = navController)
+                            }
+
+                            composable(
+                                route = "recordatorio?taskId={taskId}",
+                                arguments = listOf(
+                                    navArgument("taskId") {
+                                        type = NavType.StringType
+                                        nullable = true
+                                        defaultValue = null
+                                    }
+                                )
+                            ) { backStackEntry ->
+                                val taskId = backStackEntry.arguments?.getString("taskId")
+                                RecordatorioScreen(navController = navController, taskId = taskId)
+                            }
+
+                            composable(route = "perfil") {
+                                PerfilScreen(navController = navController)
+                            }
+
+                            composable(route = "ia") {
+                                AiScreen()
+                            }
+
+                            composable(route = "login") {
+                                LoginScreen(navController = navController)
+                            }
+
+                            composable(route = "registro") {
+                                RegistroScreen(navController = navController)
+                            }
                         }
-
-                        composable(
-                            route = "recordatorio?taskId={taskId}",
-                            arguments = listOf(
-                                navArgument("taskId") {
-                                    type = NavType.StringType
-                                    nullable = true
-                                    defaultValue = null
-                                }
-                            )
-                        ) { backStackEntry ->
-                            val taskId = backStackEntry.arguments?.getString("taskId")
-                            RecordatorioScreen(navController = navController, taskId = taskId)
-                        }
-
-                        composable(route = "perfil") {
-                            PerfilScreen(navController = navController)
-                        }
-
-                        // CalendarScreen()
-                        // AiScreen()
                     }
                 }
             }
@@ -150,9 +175,10 @@ class MainActivity : ComponentActivity() {
     @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
     @Composable
     fun Greeting(navController: NavController, modifier: Modifier = Modifier) {
-        var categoriaSeleccionada by remember { mutableStateOf("Trabajo") }
+        var categoriaSeleccionada by remember { mutableStateOf("Todas") }
 
         val categorias = listOf(
+            "Todas",
             "Trabajo",
             "Estudio",
             "Hábitos",
@@ -177,7 +203,7 @@ class MainActivity : ComponentActivity() {
         var selectedTaskIdForRestore by remember { mutableStateOf<String?>(null) }
 
         val cargarTareas = {
-            val query = if (categoriaSeleccionada == "Trabajo") {
+            val query = if (categoriaSeleccionada == "Todas") {
                 db.collection("tasks")
             } else {
                 db.collection("tasks").whereEqualTo("category", categoriaSeleccionada)
@@ -233,7 +259,7 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(BackgroundColor)
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 10.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(
@@ -267,6 +293,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .padding(horizontal = 12.dp)
                             .padding(top = 16.dp)
+                            .clickable { categoriaSeleccionada = "Todas" }
                     )
 
                     Text(
@@ -469,7 +496,6 @@ class MainActivity : ComponentActivity() {
                 }
 
                 ImagenDerechaTextoIzquierda()
-                BottomNavBarPerfil(navController = navController)
             }
 
             if (showDatePicker) {
@@ -481,11 +507,13 @@ class MainActivity : ComponentActivity() {
                             onClick = {
                                 datePickerState.selectedDateMillis?.let { millis ->
                                     selectedTaskIdForDate?.let { taskId ->
-                                        val fecha = java.time.Instant.ofEpochMilli(millis)
-                                            .atZone(java.time.ZoneOffset.UTC)
-                                            .toLocalDate()
+                                        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                                            timeInMillis = millis
+                                        }
                                         val fechaIso = "%04d-%02d-%02d".format(
-                                            fecha.year, fecha.monthValue, fecha.dayOfMonth
+                                            calendar.get(Calendar.YEAR),
+                                            calendar.get(Calendar.MONTH) + 1,
+                                            calendar.get(Calendar.DAY_OF_MONTH)
                                         )
                                         db.collection("tasks").document(taskId)
                                             .update("dueDate", fechaIso)
@@ -1072,68 +1100,79 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
 
-    @Composable
-    fun ParteAbajo(navController: NavController) {
-        Row(
+@Composable
+fun ParteAbajo(navController: NavController) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(BackgroundColor)
+            .padding(top = 8.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.DateRange,
+            contentDescription = "Calendario",
+            tint = AccentColor3,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+                .size(26.dp)
+                .clickable { 
+                    navController.navigate("calendario")
+                }
+        )
+        Icon(
+            imageVector = Icons.Default.SmartToy,
+            contentDescription = "IA",
+            tint = AccentColor3,
+            modifier = Modifier
+                .size(26.dp)
+                .clickable { 
+                    navController.navigate("ia")
+                }
+        )
+
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .border(1.dp, AccentColor3, CircleShape)
+                .clickable {
+                    navController.navigate("recordatorio")
+                },
+            contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.DateRange,
-                contentDescription = "Calendario",
-                tint = TextBeigea,
-                modifier = Modifier
-                    .size(26.dp)
-                    .clickable { /* Ruta al calendario si aplica */ }
-            )
-            Icon(
-                imageVector = Icons.Default.SmartToy,
-                contentDescription = "IA",
-                tint = TextBeigea,
-                modifier = Modifier
-                    .size(26.dp)
-                    .clickable { /* Ruta a la IA */ }
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .border(1.dp, AccentBordera, CircleShape)
-                    .clickable {
-                        navController.navigate("recordatorio")
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Añadir",
-                    tint = TextBeigea,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = "Completado",
-                tint = TextBeigea,
-                modifier = Modifier.size(26.dp)
-            )
-
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Perfil",
-                tint = TextBeigea,
-                modifier = Modifier
-                    .size(26.dp)
-                    .clickable {
-                        navController.navigate("perfil")
-                    }
+                imageVector = Icons.Default.Add,
+                contentDescription = "Añadir",
+                tint = AccentColor3,
+                modifier = Modifier.size(24.dp)
             )
         }
+
+        Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = "Completado",
+            tint = AccentColor3,
+            modifier = Modifier
+                .size(26.dp)
+                .clickable {
+                    navController.navigate("greeting") {
+                        popUpTo("greeting") { inclusive = true }
+                    }
+                }
+        )
+
+        Icon(
+            imageVector = Icons.Default.Person,
+            contentDescription = "Perfil",
+            tint = AccentColor3,
+            modifier = Modifier
+                .size(26.dp)
+                .clickable {
+                    navController.navigate("perfil")
+                }
+        )
     }
 }
 

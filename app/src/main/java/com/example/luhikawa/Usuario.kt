@@ -299,8 +299,6 @@ fun PerfilScreen(navController: NavController) {
                 onClick = { showPreferencias = true }
             )
         }
-
-        BottomNavBarPerfil(navController = navController)
     }
 
     if (showAccountDialog) {

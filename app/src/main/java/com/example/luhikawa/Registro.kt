@@ -96,6 +96,7 @@ fun RegistroScreen(navController: NavController) {
     val coroutineScope = rememberCoroutineScope()
     val credentialManager = CredentialManager.create(context)
 
+
     val auth = Firebase.auth
     val db = Firebase.firestore
 
@@ -296,7 +297,7 @@ fun RegistroScreen(navController: NavController) {
 
                                     Toast.makeText(context, "¡Bienvenida a Luhikawa, $usuario!", Toast.LENGTH_SHORT).show()
 
-                                    navController.navigate("index") {
+                                    navController.navigate("greeting") {
                                         popUpTo("registro") { inclusive = true }
                                     }
                                 }
@@ -433,7 +434,7 @@ private fun handleGoogleCredentialResponse(
                             .addOnSuccessListener {
                                 // MENSAJE DE BIENVENIDA Y NAVEGACIÓN AL INDEX
                                 Toast.makeText(context, "¡Bienvenida de vuelta, $nombre!", Toast.LENGTH_SHORT).show()
-                                navController.navigate("index") {
+                                navController.navigate("greeting") {
                                     popUpTo("login") { inclusive = true }
                                 }
                             }

@@ -195,9 +195,23 @@ fun LoginScreen(navController: NavController) {
 
         Button(
             onClick = {
-                navController.navigate("index") {
-                    popUpTo("login") { inclusive = true }
+                if (usuario.isBlank() || contrasena.isBlank()) {
+                    Toast.makeText(context, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
+                    return@Button
                 }
+
+                // Intentar iniciar sesión con Firebase (asumiendo que 'usuario' es el email)
+                auth.signInWithEmailAndPassword(usuario, contrasena)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Toast.makeText(context, "¡Bienvenida de vuelta!", Toast.LENGTH_SHORT).show()
+                            navController.navigate("greeting") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        } else {
+                            Toast.makeText(context, "Error: ${task.exception?.localizedMessage}", Toast.LENGTH_LONG).show()
+                        }
+                    }
             },
             modifier = Modifier.fillMaxWidth().height(50.dp),
             colors = ButtonDefaults.buttonColors(containerColor = BgBeigea, contentColor = TextDarka),
@@ -325,7 +339,7 @@ private fun handleGoogleCredentialResponse(
                             .addOnSuccessListener {
                                 // MENSAJE DE BIENVENIDA Y NAVEGACIÓN AL INDEX
                                 Toast.makeText(context, "¡Bienvenida de vuelta, $nombre!", Toast.LENGTH_SHORT).show()
-                                navController.navigate("index") {
+                                navController.navigate("greeting") {
                                     popUpTo("login") { inclusive = true }
                                 }
                             }

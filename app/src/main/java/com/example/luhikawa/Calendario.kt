@@ -370,8 +370,6 @@ fun CalendarScreen(navController: NavController) {
                 }
             }
         }
-
-        BottomNavBarPerfil(navController = navController)
     }
 }
 @Composable
