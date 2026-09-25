@@ -1102,7 +1102,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
+/*@Composable
 fun ParteAbajo(navController: NavController) {
     Row(
         modifier = Modifier
@@ -1174,7 +1174,7 @@ fun ParteAbajo(navController: NavController) {
                 }
         )
     }
-}
+}*/
 
 @Composable
 fun ImportantTaskCard(

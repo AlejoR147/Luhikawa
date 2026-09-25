@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -78,7 +79,7 @@ import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-
+import androidx.compose.material.icons.filled.Add
 
 class MainActivityPerfil : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -642,12 +643,12 @@ fun BottomNavItem(
 }
 
 @Composable
-fun BottomNavBarPerfil(navController: NavController) {
+fun ParteAbajo(navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(BgDarka)
-            .padding(vertical = 16.dp, horizontal = 8.dp),
+            .padding(vertical = 16.dp, horizontal = 24.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -660,26 +661,21 @@ fun BottomNavBarPerfil(navController: NavController) {
 
         BottomNavItem(
             icon = Icons.Default.AutoAwesome,
-            contentDescription = "Clima",
+            contentDescription = "IA",
             tint = Color.White,
-            onClick = { /* Acción de clima si la tienes */ }
+            onClick = { /* IA*/ }
         )
 
         Box(
             modifier = Modifier
-                .size(60.dp)
-                .border(BorderStroke(1.dp, Color.White), CircleShape)
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.2f))
+                .border(BorderStroke(1.5.dp, Color.White), CircleShape)
                 .clickable {
                     navController.navigate("recordatorio")
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .background(Color.White.copy(alpha = 0.2f), CircleShape)
-            )
-        }
+                }
+        )
 
         BottomNavItem(
             icon = Icons.Default.Home,
@@ -693,6 +689,26 @@ fun BottomNavBarPerfil(navController: NavController) {
             contentDescription = "Perfil",
             tint = Color.White,
             onClick = { navController.navigate("perfil") }
+        )
+    }
+}
+
+@Composable
+fun RectanguloConImagen() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(65.dp)
+            .background(AccentColor32),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.logolk),
+            contentDescription = "Logo LK",
+            modifier = Modifier
+                .size(85.dp)
+                .align(Alignment.CenterEnd),
+            contentScale = ContentScale.Fit
         )
     }
 }

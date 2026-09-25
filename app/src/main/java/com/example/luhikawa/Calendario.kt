@@ -72,6 +72,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.material3.Scaffold
+import com.example.finalproject.UI.RectanguloConImagen2
 
 
 val BgDarke = Color(0xFF1A1717)
@@ -79,6 +81,7 @@ val BgBeigee = Color(0xFFC7AF93)
 val TextBeigee = Color(0xFFC7AF93)
 val TextDarkee = Color(0xFF1A1717)
 val AccentBordere = Color(0xFFC7AF93)
+val AccentColor32 = Color(0xFFC7AF93)
 
 val CustomFontFamilye = FontFamily.Serif
 
@@ -148,8 +151,17 @@ fun CalendarScreen(navController: NavController) {
 
     LaunchedEffect(Unit) { cargarTareas() }
 
-    val tareasPorFecha = remember(tareas) {
-        tareas.groupBy { tarea ->
+    // Filtrar solo tareas PENDIENTES (no completadas)
+    val tareasPendientes = remember(tareas) {
+        tareas.filter { tarea ->
+            val completada = tarea["completed"] as? Boolean ?: false
+            !completada
+        }
+    }
+
+    // Agrupar tareas pendientes por fecha
+    val tareasPorFecha = remember(tareasPendientes) {
+        tareasPendientes.groupBy { tarea ->
             val fechaStr = tarea["dueDate"] as? String ?: return@groupBy null
             try {
                 LocalDate.parse(fechaStr)
@@ -176,128 +188,131 @@ fun CalendarScreen(navController: NavController) {
     val celdas = List(offset) { null } + (1..diasEnMes).map { it }
     val celdasCompletas = celdas + List((7 - (celdas.size % 7)) % 7) { null }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(BgDarka)
-            .padding(20.dp),
-        verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
+            modifier = Modifier.fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Cabecera que ocupa todo el ancho de la pantalla
+            RectanguloConImagen2()
+
+            // Contenido con padding horizontal
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
             ) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextBeigea)
-                Image(painter = painterResource(id = R.drawable.logolk), contentDescription = "Logo", modifier = Modifier.size(40.dp))
-            }
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.KeyboardArrowLeft,
-                    contentDescription = "Mes anterior",
-                    tint = TextBeigea,
-                    modifier = Modifier.clickable {
-                        if (mes == 1) {
-                            mes = 12
-                            anio -= 1
-                        } else {
-                            mes -= 1
+                // Selector de mes
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.KeyboardArrowLeft,
+                        contentDescription = "Mes anterior",
+                        tint = TextBeigea,
+                        modifier = Modifier.clickable {
+                            if (mes == 1) {
+                                mes = 12
+                                anio -= 1
+                            } else {
+                                mes -= 1
+                            }
                         }
-                    }
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    "$mesNombre $anio",
-                    style = TextStyle(fontFamily = InriaSerif, fontSize = 22.sp, color = TextBeigea)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Icon(
-                    Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Mes siguiente",
-                    tint = TextBeigea,
-                    modifier = Modifier.clickable {
-                        if (mes == 12) {
-                            mes = 1
-                            anio += 1
-                        } else {
-                            mes += 1
-                        }
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(modifier = Modifier.fillMaxWidth()) {
-                listOf("D", "L", "M", "M", "J", "V", "S").forEach { d ->
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        text = d,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center,
-                        color = TextBeigea.copy(alpha = 0.5f),
-                        fontFamily = InriaSerif
+                        "$mesNombre $anio",
+                        style = TextStyle(fontFamily = InriaSerif, fontSize = 22.sp, color = TextBeigea)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Icon(
+                        Icons.Default.KeyboardArrowRight,
+                        contentDescription = "Mes siguiente",
+                        tint = TextBeigea,
+                        modifier = Modifier.clickable {
+                            if (mes == 12) {
+                                mes = 1
+                                anio += 1
+                            } else {
+                                mes += 1
+                            }
+                        }
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            celdasCompletas.chunked(7).forEach { semana ->
-                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                    semana.forEach { dia ->
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .aspectRatio(1f)
-                                .clip(CircleShape)
-                                .background(
-                                    if (dia != null) {
-                                        val fecha = LocalDate.of(anio, mes, dia)
-                                        colorParaFecha(fecha) ?: Color.Transparent
-                                    } else Color.Transparent
-                                )
-                                .clickable(enabled = dia != null) {
-                                    if (dia != null) {
-                                        fechaSeleccionada = LocalDate.of(anio, mes, dia)
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (dia != null) {
-                                Text(
-                                    text = dia.toString(),
-                                    color = if (colorParaFecha(LocalDate.of(anio, mes, dia)) != null)
-                                        Color.White else TextBeigea,
-                                    fontFamily = InriaSerif,
-                                    fontSize = 14.sp
-                                )
+                // Días de la semana
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    listOf("D", "L", "M", "M", "J", "V", "S").forEach { d ->
+                        Text(
+                            text = d,
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center,
+                            color = TextBeigea.copy(alpha = 0.5f),
+                            fontFamily = InriaSerif
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Cuadrícula del mes
+                celdasCompletas.chunked(7).forEach { semana ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp)
+                    ) {
+                        semana.forEach { dia ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (dia != null) {
+                                            val fecha = LocalDate.of(anio, mes, dia)
+                                            colorParaFecha(fecha) ?: Color.Transparent
+                                        } else Color.Transparent
+                                    )
+                                    .clickable(enabled = dia != null) {
+                                        if (dia != null) {
+                                            fechaSeleccionada = LocalDate.of(anio, mes, dia)
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (dia != null) {
+                                    Text(
+                                        text = dia.toString(),
+                                        color = if (colorParaFecha(LocalDate.of(anio, mes, dia)) != null)
+                                            Color.White else TextBeigea,
+                                        fontFamily = InriaSerif,
+                                        fontSize = 15.sp
+                                    )
+                                }
                             }
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    "Tareas asignadas",
+                    style = TextStyle(fontFamily = InriaSerif, fontSize = 20.sp, color = TextBeigea, fontWeight = FontWeight.Bold)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                "Tareas asignadas",
-                style = TextStyle(fontFamily = InriaSerif, fontSize = 20.sp, color = TextBeigea, fontWeight = FontWeight.Bold)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             val tareasDelDia = fechaSeleccionada?.let { tareasPorFecha[it] } ?: emptyList()
 
@@ -314,7 +329,7 @@ fun CalendarScreen(navController: NavController) {
                             else "No hay tareas para este día",
                             color = TextBeigea.copy(alpha = 0.5f),
                             fontFamily = InriaSerif,
-                            modifier = Modifier.padding(vertical = 8.dp)
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                         )
                     }
                 } else {
@@ -335,37 +350,43 @@ fun CalendarScreen(navController: NavController) {
                         val textoConFecha =
                             if (infoTiempo.isNotEmpty()) "$titulo - $infoTiempo" else titulo
 
-                        SwipeableTaskItem(
-                            textoTarea = textoConFecha,
-                            fechaTarea = tarea["date"] as? String,
-                            isCafe = (index % 2 == 0),
-                            iconIndex = iconIndex,
-                            onCircleClick = {
-                                if (id != null) {
-                                    db.collection("tasks").document(id)
-                                        .update("completed", true)
-                                        .addOnSuccessListener { cargarTareas() }
-                                }
-                            },
-                            onImportanteClick = {
-                                if (id != null) {
-                                    db.collection("tasks").document(id)
-                                        .update("important", !importante)
-                                        .addOnSuccessListener { cargarTareas() }
-                                }
-                            },
-                            onFechaClick = {},
-                            onBasuraClick = {},
-                            onEliminar = {
-                                if (id != null) {
-                                    db.collection("tasks").document(id)
-                                        .delete()
-                                        .addOnSuccessListener { cargarTareas() }
-                                }
-                            },
-                            onClick = {}
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(90.dp)
+                                .padding(vertical = 4.dp)
+                        ) {
+                            SwipeableTaskItem(
+                                textoTarea = textoConFecha,
+                                fechaTarea = tarea["date"] as? String,
+                                isCafe = (index % 2 == 0),
+                                iconIndex = iconIndex,
+                                onCircleClick = {
+                                    if (id != null) {
+                                        db.collection("tasks").document(id)
+                                            .update("completed", true)
+                                            .addOnSuccessListener { cargarTareas() }
+                                    }
+                                },
+                                onImportanteClick = {
+                                    if (id != null) {
+                                        db.collection("tasks").document(id)
+                                            .update("important", !importante)
+                                            .addOnSuccessListener { cargarTareas() }
+                                    }
+                                },
+                                onFechaClick = {},
+                                onBasuraClick = {},
+                                onEliminar = {
+                                    if (id != null) {
+                                        db.collection("tasks").document(id)
+                                            .delete()
+                                            .addOnSuccessListener { cargarTareas() }
+                                    }
+                                },
+                                onClick = {}
+                            )
+                        }
                     }
                 }
             }
