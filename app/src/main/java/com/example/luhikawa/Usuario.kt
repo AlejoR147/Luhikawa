@@ -648,7 +648,7 @@ fun ParteAbajo(navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .background(BgDarka)
-            .padding(vertical = 16.dp, horizontal = 24.dp),
+            .padding(vertical = 16.dp, horizontal = 1.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {

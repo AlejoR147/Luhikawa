@@ -582,21 +582,14 @@ fun HeaderSection() {
             .height(65.dp)
             .background(BgBeigea)
             .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.End, // Mantiene el logo alineado a la derecha
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = Icons.Default.Menu,
-            contentDescription = "Menú",
-            tint = TextDarka,
-            modifier = Modifier.size(24.dp)
-        )
-
         Image(
             painter = painterResource(id = R.drawable.logolk),
             contentDescription = "Logo LK",
             modifier = Modifier
-                .size(70.dp)
+                .size(90.dp)
                 .padding(end = 4.dp),
             contentScale = ContentScale.Fit
         )
