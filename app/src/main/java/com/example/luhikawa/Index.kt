@@ -96,7 +96,7 @@ import androidx.compose.ui.text.style.TextOverflow
 
 
 val BackgroundColor = Color(0xFF1A1717)
-val AccentColor3 = Color(0xFFC7AF93)
+val AccentColor32 = Color(0xFFC7AF93)
 
 val InriaSerif = FontFamily(
     Font(R.font.inriaserif_regular)
@@ -1115,7 +1115,7 @@ fun ParteAbajo(navController: NavController) {
         Icon(
             imageVector = Icons.Default.DateRange,
             contentDescription = "Calendario",
-            tint = AccentColor3,
+            tint = AccentColor32,
             modifier = Modifier
                 .size(26.dp)
                 .clickable { 
@@ -1125,7 +1125,7 @@ fun ParteAbajo(navController: NavController) {
         Icon(
             imageVector = Icons.Default.SmartToy,
             contentDescription = "IA",
-            tint = AccentColor3,
+            tint = AccentColor32,
             modifier = Modifier
                 .size(26.dp)
                 .clickable { 
@@ -1136,7 +1136,7 @@ fun ParteAbajo(navController: NavController) {
         Box(
             modifier = Modifier
                 .size(50.dp)
-                .border(1.dp, AccentColor3, CircleShape)
+                .border(1.dp, AccentColor32, CircleShape)
                 .clickable {
                     navController.navigate("recordatorio")
                 },
@@ -1145,7 +1145,7 @@ fun ParteAbajo(navController: NavController) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "Añadir",
-                tint = AccentColor3,
+                tint = AccentColor32,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -1153,7 +1153,7 @@ fun ParteAbajo(navController: NavController) {
         Icon(
             imageVector = Icons.Default.CheckCircle,
             contentDescription = "Completado",
-            tint = AccentColor3,
+            tint = AccentColor32,
             modifier = Modifier
                 .size(26.dp)
                 .clickable {
@@ -1166,7 +1166,7 @@ fun ParteAbajo(navController: NavController) {
         Icon(
             imageVector = Icons.Default.Person,
             contentDescription = "Perfil",
-            tint = AccentColor3,
+            tint = AccentColor32,
             modifier = Modifier
                 .size(26.dp)
                 .clickable {

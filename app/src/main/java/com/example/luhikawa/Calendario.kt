@@ -81,7 +81,7 @@ val BgBeigee = Color(0xFFC7AF93)
 val TextBeigee = Color(0xFFC7AF93)
 val TextDarkee = Color(0xFF1A1717)
 val AccentBordere = Color(0xFFC7AF93)
-val AccentColor32 = Color(0xFFC7AF93)
+val AccentColor3 = Color(0xFFC7AF93)
 
 val CustomFontFamilye = FontFamily.Serif
 

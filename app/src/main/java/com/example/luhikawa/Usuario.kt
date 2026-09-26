@@ -663,7 +663,7 @@ fun ParteAbajo(navController: NavController) {
             icon = Icons.Default.AutoAwesome,
             contentDescription = "IA",
             tint = Color.White,
-            onClick = { /* IA*/ }
+            onClick = { navController.navigate("ia") }
         )
 
         Box(
